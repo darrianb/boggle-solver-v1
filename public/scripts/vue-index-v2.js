@@ -26,6 +26,7 @@ app.component('boggle-solver', {
       validWords: [],
       boardInput: '',
       sizeInput: 4,
+      board: [],
     }
   },
   computed: {
@@ -38,24 +39,29 @@ app.component('boggle-solver', {
     validWords() {
       return this.solution.validWords;
     },
-    board() {
-      return validateBoard(this.boardParameter)?.board || 'abcabcabc';
-    },
-    size() {
+    gridSize() {
       return this.board ? Math.sqrt(this.board.length) : 4;
     },
   },
   methods: {
     solveBoard() {
-      this.solution = solveBoard(this.board);
-      this.validWords = this.solution.validWords;
+      let board = validateBoard(this.boardInput)?.board || this.board;
+      console.log('solveBoard', board);
+      this.solution = solveBoard(board);
+      console.log(this.solution);
+      this.board = this.solution?.board;
+      this.validWords = this.solution.validWordArray?.sort();
+    },
+    randomizeBoard() {
+      this.board = randomBoard(this.size);
     },
   },
   created() {
     boardInput = this.boardParameter || '';
     sizeInput = this.sizeParameter || 4;
-    this.board = randomBoard();
+    this.board = validateBoard(this.boardParameter)?.board || randomBoard();
     this.solveBoard();
+    this.validWords = this.solution.validWordArray;
   },
   template: `
     <div>
@@ -66,12 +72,13 @@ app.component('boggle-solver', {
         <button @click="clearHistory()">Clear History</button>
       </div>
       <div>
-        <input v-model="boardInput" placeholder="Board Parameter" />
-        <p>Board Input: {{ boardInput }}</p>
+        <input v-model="boardInput" v-bind:value="boardInput" placeholder="Board Parameter" />
+        <p>Board Input: {{ boardInput }} ({{ boardInput.length }})</p>
         <input v-model="sizeInput" placeholder="Grid Size Parameter" />
         <p>Grid Size Input: {{ sizeInput }}</p>
       </div>
       <boggle-board v-bind:board="board"></boggle-board>
+      <valid-words v-bind:validWords="validWords"></valid-words>
     </div>
     `
 });
@@ -82,7 +89,7 @@ app.component('boggle-board', {
     <div class="boggle-board">
       {{boardMatrix}}
       <div v-for="row in boardMatrix" class="row">
-        <div v-for="letter in row" class="square col-auto">
+        <div v-for="letter in row" class="square col" v-bind:style="'width: calc(100%/' + gridSize + ');'">
           <div class="square-content fs-1">
             {{ letter }}
           </div>
@@ -100,7 +107,7 @@ app.component('boggle-board', {
     boardMatrix() {
       let board = this.board;
       console.log(board);
-      let gridSize = this.gridSize;
+      let gridSize = Math.sqrt(board.length);
       let matrix = [];
       for (let i = 0; i < gridSize; i++) {
         let row = [];
@@ -112,6 +119,55 @@ app.component('boggle-board', {
       return matrix;
     }
   }
+});
+
+app.component('valid-words', {
+  props: ['validWords'],
+  template: `
+    <div class="valid-words">
+      <div v-for="(words, length) in groupedWords" class="group row">
+          <h4>{{ length }} Letter Words</h4>      
+          <div class="col-3" v-for="column in words">
+            <ul class="group-title list-group-flush">
+              <li class="list-group-item" v-for="word in column" class="word">
+                {{ word }}
+              </li>
+            </ul>
+          </div>
+      </div>
+    </div>
+  `,
+  computed: {
+    groupedWords() {
+      let words = this.validWords;
+      console.log(words);
+      let grouped = {};
+      words.forEach(word => {
+        grouped[word.length] = grouped[word.length] || [];
+        grouped[word.length].push(word);
+      });
+
+      let columnCount = 4;
+      Object.keys(grouped).forEach(key => {
+        countPerColumn = Math.ceil(grouped[key].length / columnCount);
+        let columns = [];
+        for (let i = 0; i < columnCount; i++) {
+          let column = [];
+          for (let j = 0; j < countPerColumn; j++) {
+            let word = grouped[key][i * countPerColumn + j];
+            if (word) {
+              column.push(word);
+            }
+          }
+          columns.push(column);
+        }
+        grouped[key] = columns;
+      });
+
+      console.log('grouped', grouped);
+      return grouped;
+    },
+  },
 });
 
 // Needs Collins2019Words (Trie Dictionary) to work;
