@@ -1,7 +1,15 @@
-function getDictionary(dictionaryObj) {
+// Needs Collins2019Words (Trie Dictionary) to work;
+const DICE_SETS = {
+  3: [["A", "A", "E", "E", "G", "N"], ["A", "B", "B", "J", "O", "O"], ["A", "C", "H", "O", "P", "S"], ["A", "F", "F", "K", "P", "S"], ["A", "O", "O", "T", "T", "W"], ["C", "I", "M", "O", "T", "U"], ["D", "E", "I", "L", "R", "X"], ["D", "E", "L", "R", "V", "Y"], ["D", "I", "S", "T", "T", "Y"]],
+  4: [["A", "A", "E", "E", "G", "N"], ["A", "B", "B", "J", "O", "O"], ["A", "C", "H", "O", "P", "S"], ["A", "F", "F", "K", "P", "S"], ["A", "O", "O", "T", "T", "W"], ["C", "I", "M", "O", "T", "U"], ["D", "E", "I", "L", "R", "X"], ["D", "E", "L", "R", "V", "Y"], ["D", "I", "S", "T", "T", "Y"], ["E", "E", "G", "H", "N", "W"], ["E", "E", "I", "N", "S", "U"], ["E", "H", "R", "T", "V", "W"], ["E", "I", "O", "S", "S", "T"], ["E", "L", "R", "T", "T", "Y"], ["H", "I", "M", "N", "U", "QU"], ["H", "L", "N", "N", "R", "Z"]],
+  5: [["A", "A", "A", "R", "F", "S"], ["A", "A", "E", "E", "E", "E"], ["A", "A", "F", "I", "R", "S"], ["A", "E", "D", "N", "N", "N"], ["A", "E", "E", "E", "E", "M"], ["A", "E", "E", "G", "M", "U"], ["A", "E", "G", "M", "N", "N"], ["A", "F", "I", "R", "S", "Y"], ["B", "J", "K", "QU", "X", "Z"], ["C", "C", "E", "N", "S", "T"], ["C", "E", "I", "I", "L", "T"], ["C", "E", "I", "L", "P", "T"], ["C", "E", "I", "P", "S", "T"], ["D", "D", "H", "N", "O", "T"], ["D", "H", "H", "L", "N", "O"], ["D", "H", "H", "L", "O", "R"], ["D", "H", "L", "N", "O", "R"], ["E", "I", "I", "I", "T", "T"], ["E", "M", "O", "T", "T", "T"], ["E", "N", "S", "S", "S", "U"], ["F", "I", "P", "R", "S", "Y"], ["G", "O", "R", "R", "V", "W"], ["I", "K", "L", "QU", "U", "W"], ["N", "O", "O", "T", "U", "W"], ["O", "O", "O", "T", "T", "U"]],
+  6: [["A", "A", "A", "F", "R", "S"], ["A", "A", "E", "E", "E", "E"], ["A", "A", "E", "E", "O", "O"], ["A", "A", "F", "I", "R", "S"], ["A", "B", "D", "E", "I", "O"], ["A", "D", "E", "N", "N", "N"], ["A", "E", "E", "E", "E", "M"], ["A", "E", "E", "G", "M", "U"], ["A", "E", "G", "M", "N", "N"], ["A", "E", "I", "L", "M", "N"], ["A", "E", "I", "N", "O", "U"], ["A", "F", "I", "R", "S", "Y"], ["AN", "ER", "HE", "IN", "QU", "TH"], ["B", "B", "J", "K", "X", "Z"], ["C", "C", "E", "N", "S", "T"], ["C", "D", "D", "L", "N", "N"], ["C", "E", "I", "I", "T", "T"], ["C", "E", "I", "P", "S", "T"], ["C", "F", "G", "N", "U", "Y"], ["D", "D", "H", "N", "O", "T"], ["D", "H", "H", "L", "O", "R"], ["D", "H", "L", "N", "O", "R"], ["D", "H", "N", "O", "O", "W"], ["E", "H", "I", "L", "R", "S"], ["E", "I", "I", "L", "S", "T"], ["E", "I", "L", "P", "S", "T"], ["E", "I", "O", "▄", "▄", "▄"], ["E", "M", "O", "T", "T", "T"], ["E", "N", "S", "S", "S", "U"], ["G", "O", "R", "R", "V", "W"], ["H", "I", "R", "S", "T", "V"], ["H", "O", "P", "R", "S", "T"], ["I", "P", "R", "S", "Y", "Y"], ["J", "K", "QU", "W", "X", "Z"], ["N", "O", "O", "T", "U", "W"], ["O", "O", "O", "T", "T", "U"]],
+};
+
+function getDictionary() {
   if (localStorage.getItem('dictionary') === null) {
     var req = new XMLHttpRequest();
-    req.open('GET', 'Collins2019Words.json', false);
+    req.open('GET', 'scripts/Collins2019Words.json', false);
     req.send(null);
     var dictionary = JSON.parse(req.responseText);
     localStorage.setItem('dictionary', JSON.stringify(dictionary));
@@ -9,76 +17,6 @@ function getDictionary(dictionaryObj) {
     var dictionary = JSON.parse(localStorage.getItem('dictionary'));
   }
   return dictionary;
-}
-
-function updateHistory(board) {
-}
-
-function renderUI() {
-  var boggleBoard = document.querySelector('#boggle-board');
-  var boggleBoardInput = document.querySelector('#board-input');
-  var validWordsList = document.querySelector('#valid-words-list');
-
-  boggleBoard.innerHTML = '';
-  boggleBoardInput.value = '';
-  validWordsList.innerHTML = '';
-
-  boggleBoardInput.value = SOLUTION.board.join(',');
-
-  SOLUTION.validWordArray.forEach(word => {
-    var li = document.createElement('li');
-    li.classList.add('list-group-item');
-    li.innerText = word;
-    validWordsList.appendChild(li);
-  });
-
-  var validWordsGroup = document.createElement('div');
-  var sortedWordsTemplate =
-    `{{#each SORTED_VALID_WORDS}}
-  <div class="list-group-item row" id="{{@key}}-Letter-Words">
-    <button class="btn col-12 p-0" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{@key}}"
-            aria-expanded="true" aria-controls="collapse{{@key}}">
-      <p class="align-items-center d-flex m-0">
-        <span class="material-icons expand-icon me-2">expand_less</span><span
-              class="material-icons collapse-icon me-2">expand_more</span>
-        <span class="fw-bold">{{@key}}-Letter Words</span>&nbsp;<span class="fw-light">({{this.count}})</span>
-      </p>
-    </button>
-    <div class="collapse multi-collapse show" id="collapse{{@key}}">
-      <div class="row">
-        {{#each this.columns}}
-        <div class="col-2">
-          <ul class="list-group list-group-flush">
-            {{#each this}}
-            <li class="list-group-item">{{this}}</li>
-            {{/each}}
-          </ul>
-        </div>
-        {{/each}}
-      </div>
-    </div>
-  </div>
-  {{/each}}`
-
-  let root = document.documentElement;
-  root.style.setProperty('--grid-size', SOLUTION.gridSize);
-
-  for (let i = 0; i < SOLUTION.gridSize; i++) {
-    var row = document.createElement('div');
-    row.classList.add('row');
-    for (let j = 0; j < SOLUTION.gridSize; j++) {
-      var squareElement = document.createElement('div');
-      squareElement.classList.add('square');
-
-      var squareText = document.createElement('span');
-      squareText.classList.add('square-content');
-      squareText.innerText = SOLUTION.board[i * SOLUTION.gridSize + j];
-      squareElement.appendChild(squareText);
-
-      row.appendChild(squareElement);
-    }
-    boggleBoard.appendChild(row);
-  }
 }
 
 function generateRandomBoard() {
@@ -92,24 +30,7 @@ function generateRandomBoard() {
 
   SOLUTION = solveBoard(BOARD, DICTIONARY, 3);
   console.log('SOLVER OUTPUT', JSON.stringify(SOLUTION));
-
-  renderUI();
 }
-
-// Needs Collins2019Words (Trie Dictionary) to work;
-const DICE_SETS = {
-  3: [["A", "A", "E", "E", "G", "N"], ["A", "B", "B", "J", "O", "O"], ["A", "C", "H", "O", "P", "S"], ["A", "F", "F", "K", "P", "S"], ["A", "O", "O", "T", "T", "W"], ["C", "I", "M", "O", "T", "U"], ["D", "E", "I", "L", "R", "X"], ["D", "E", "L", "R", "V", "Y"], ["D", "I", "S", "T", "T", "Y"]],
-  4: [["A", "A", "E", "E", "G", "N"], ["A", "B", "B", "J", "O", "O"], ["A", "C", "H", "O", "P", "S"], ["A", "F", "F", "K", "P", "S"], ["A", "O", "O", "T", "T", "W"], ["C", "I", "M", "O", "T", "U"], ["D", "E", "I", "L", "R", "X"], ["D", "E", "L", "R", "V", "Y"], ["D", "I", "S", "T", "T", "Y"], ["E", "E", "G", "H", "N", "W"], ["E", "E", "I", "N", "S", "U"], ["E", "H", "R", "T", "V", "W"], ["E", "I", "O", "S", "S", "T"], ["E", "L", "R", "T", "T", "Y"], ["H", "I", "M", "N", "U", "QU"], ["H", "L", "N", "N", "R", "Z"]],
-  5: [["A", "A", "A", "R", "F", "S"], ["A", "A", "E", "E", "E", "E"], ["A", "A", "F", "I", "R", "S"], ["A", "E", "D", "N", "N", "N"], ["A", "E", "E", "E", "E", "M"], ["A", "E", "E", "G", "M", "U"], ["A", "E", "G", "M", "N", "N"], ["A", "F", "I", "R", "S", "Y"], ["B", "J", "K", "QU", "X", "Z"], ["C", "C", "E", "N", "S", "T"], ["C", "E", "I", "I", "L", "T"], ["C", "E", "I", "L", "P", "T"], ["C", "E", "I", "P", "S", "T"], ["D", "D", "H", "N", "O", "T"], ["D", "H", "H", "L", "N", "O"], ["D", "H", "H", "L", "O", "R"], ["D", "H", "L", "N", "O", "R"], ["E", "I", "I", "I", "T", "T"], ["E", "M", "O", "T", "T", "T"], ["E", "N", "S", "S", "S", "U"], ["F", "I", "P", "R", "S", "Y"], ["G", "O", "R", "R", "V", "W"], ["I", "K", "L", "QU", "U", "W"], ["N", "O", "O", "T", "U", "W"], ["O", "O", "O", "T", "T", "U"]],
-  6: [["A", "A", "A", "F", "R", "S"], ["A", "A", "E", "E", "E", "E"], ["A", "A", "E", "E", "O", "O"], ["A", "A", "F", "I", "R", "S"], ["A", "B", "D", "E", "I", "O"], ["A", "D", "E", "N", "N", "N"], ["A", "E", "E", "E", "E", "M"], ["A", "E", "E", "G", "M", "U"], ["A", "E", "G", "M", "N", "N"], ["A", "E", "I", "L", "M", "N"], ["A", "E", "I", "N", "O", "U"], ["A", "F", "I", "R", "S", "Y"], ["AN", "ER", "HE", "IN", "QU", "TH"], ["B", "B", "J", "K", "X", "Z"], ["C", "C", "E", "N", "S", "T"], ["C", "D", "D", "L", "N", "N"], ["C", "E", "I", "I", "T", "T"], ["C", "E", "I", "P", "S", "T"], ["C", "F", "G", "N", "U", "Y"], ["D", "D", "H", "N", "O", "T"], ["D", "H", "H", "L", "O", "R"], ["D", "H", "L", "N", "O", "R"], ["D", "H", "N", "O", "O", "W"], ["E", "H", "I", "L", "R", "S"], ["E", "I", "I", "L", "S", "T"], ["E", "I", "L", "P", "S", "T"], ["E", "I", "O", "▄", "▄", "▄"], ["E", "M", "O", "T", "T", "T"], ["E", "N", "S", "S", "S", "U"], ["G", "O", "R", "R", "V", "W"], ["H", "I", "R", "S", "T", "V"], ["H", "O", "P", "R", "S", "T"], ["I", "P", "R", "S", "Y", "Y"], ["J", "K", "QU", "W", "X", "Z"], ["N", "O", "O", "T", "U", "W"], ["O", "O", "O", "T", "T", "U"]],
-};
-
-let DICTIONARY, BOARD_INPUT, SOLUTION, VALID_WORDS;
-document.addEventListener('DOMContentLoaded', function () {
-  DICTIONARY = getDictionary();
-  main();
-  renderUI();
-});
 
 function main(BOARD_INPUT = '') {
   if (!BOARD_INPUT && typeof window !== 'undefined') {
@@ -159,6 +80,7 @@ function solveBoard(boardInput, wordList, minLength = 3) {
 
   const validWordSet = new Set();
   const boardMatrix = [];
+  const wordList = getDictionary();
   const dictionaryTrie = GenerateDictionaryTrie(wordList);
 
   output.status = boardValidatorResult.status;
@@ -435,4 +357,16 @@ function validateBoard(boardInput) {
     result.status = "validateBoard: Failed";
   }
   return result;
+}
+
+function randomBoard(gridSize = 4) {
+  console.log('randomBoard', gridSize);
+  let board = [];
+  const dice = diceSets[gridSize];
+  console.log('DICE', dice);
+
+  for (let i = 0; i < dice.length; i++) {
+    board.push(dice[i][Math.ceil(Math.random() * dice[i].length - 1)]);
+  }
+  return board;
 }
