@@ -53,7 +53,7 @@ app.component('boggle-solver', {
       this.validWords = this.solution.validWordArray?.sort();
     },
     randomizeBoard() {
-      this.board = randomBoard(this.size);
+      this.board = randomBoard(this.sizeInput || this.size);
     },
   },
   created() {
@@ -67,15 +67,22 @@ app.component('boggle-solver', {
     <div>
       <div>
         <button @click="solveBoard()">Solve</button>
-        <button @click="randomizeBoard()">Randomize</button>
+        <button @click="">Randomize</button>
         <button @click="clearBoard()">Clear</button>
         <button @click="clearHistory()">Clear History</button>
       </div>
       <div>
-        <input v-model="boardInput" v-bind:value="boardInput" placeholder="Board Parameter" />
-        <p>Board Input: {{ boardInput }} ({{ boardInput.length }})</p>
-        <input v-model="sizeInput" placeholder="Grid Size Parameter" />
-        <p>Grid Size Input: {{ sizeInput }}</p>
+        <form autocomplete="off" onsumbit="randomizeBoard()">
+          <input v-model="boardInput" v-bind:value="boardInput" placeholder="Board Parameter" />
+          <p>Board Input: {{ boardInput }} ({{ boardInput.length }})</p>
+          
+          <p>Random Board</p>
+          <div class="input-group">
+          <label>Grid Size:</label>
+          <input type="number" class="form-control" min="3" max="6" v-model="sizeInput" placeholder="Grid Size Parameter" />
+            <span class="form-control" required> x {{ sizeInput }}</span>
+          </div>
+        </form>
       </div>
       <boggle-board v-bind:board="board"></boggle-board>
       <valid-words v-bind:validWords="validWords"></valid-words>
@@ -87,7 +94,7 @@ app.component('boggle-board', {
   props: ['board'],
   template: `
     <div class="boggle-board">
-      {{boardMatrix}}
+      <!-- {{boardMatrix}} -->
       <div v-for="row in boardMatrix" class="row">
         <div v-for="letter in row" class="square col" v-bind:style="'width: calc(100%/' + gridSize + ');'">
           <div class="square-content fs-1">
@@ -124,7 +131,7 @@ app.component('boggle-board', {
 app.component('valid-words', {
   props: ['validWords'],
   template: `
-    <div class="valid-words">
+    <div class="valid-words container p-4">
       <div v-for="(words, length) in groupedWords" class="group row">
           <h4>{{ length }} Letter Words</h4>      
           <div class="col-3" v-for="column in words">
