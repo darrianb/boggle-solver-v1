@@ -27,6 +27,7 @@ app.component('boggle-solver', {
       boardInput: '',
       sizeInput: 4,
       board: [],
+      autoUpdateSolution: true,
     }
   },
   computed: {
@@ -54,6 +55,11 @@ app.component('boggle-solver', {
     },
     randomizeBoard() {
       this.board = randomBoard(this.sizeInput || this.size);
+      if (this.autoUpdateSolution) {
+        this.solveBoard();
+      } else {
+        this.validWords = [];
+      }
     },
   },
   created() {
@@ -67,9 +73,13 @@ app.component('boggle-solver', {
     <div>
       <div>
         <button @click="solveBoard()">Solve</button>
-        <button @click="">Randomize</button>
-        <button @click="clearBoard()">Clear</button>
-        <button @click="clearHistory()">Clear History</button>
+        <button @click="randomizeBoard()">Randomize</button>
+        <input class="form-check-input" value="" type="checkbox" v-model="autoUpdateSolution" id="autoUpdateSolution">
+        <label class="form-check-label" for="autoUpdateSolution">
+        Auto Update Solution
+        </label>
+        <!-- <button @click="clearBoard()">Clear</button> -->
+        <!-- <button @click="clearHistory()">Clear History</button> -->
       </div>
       <div>
         <form autocomplete="off" onsumbit="randomizeBoard()">
@@ -133,7 +143,7 @@ app.component('valid-words', {
   template: `
     <div class="valid-words container p-4">
       <div v-for="(words, length) in groupedWords" class="group row">
-          <h4>{{ length }} Letter Words</h4>      
+          <h4>{{ length }} Letter Words</h4>
           <div class="col-3" v-for="column in words">
             <ul class="group-title list-group-flush">
               <li class="list-group-item" v-for="word in column" class="word">
@@ -174,6 +184,31 @@ app.component('valid-words', {
       console.log('grouped', grouped);
       return grouped;
     },
+  },
+});
+
+app.component('countdown-timer', {
+  props: ['time'],
+  template: `
+    <div class="countdown-timer">
+      <div class="countdown-time">
+        <span class="countdown-time-value">{{ time }}</span>
+        <span class="countdown-time-label">seconds</span>
+      </div>
+    </div>
+  `,
+  computed: {
+    time() {
+      return Math.floor(this.time / 1000);
+    },
+  },
+  mounted() {
+    this.interval = setInterval(() => {
+      this.time -= 1000;
+    }, 1000);
+  },
+  beforeDestroy() {
+    clearInterval(this.interval);
   },
 });
 
@@ -234,7 +269,7 @@ function randomBoard(gridSize = 4) {
   for (let i = 0; i < dice.length; i++) {
     board.push(dice[i][Math.ceil(Math.random() * dice[i].length - 1)]);
   }
-  return board;
+  return shuffle(board);
 }
 
 function solveBoard(boardInput, wordList = dictionary, minLength = 3) {
@@ -547,5 +582,23 @@ function randomBoard(gridSize = 4) {
   for (let i = 0; i < dice.length; i++) {
     board.push(dice[i][Math.ceil(Math.random() * dice[i].length - 1)]);
   }
-  return board;
+  return shuffle(board);
+}
+
+function shuffle(array) {
+  let currentIndex = array.length, randomIndex;
+
+  // While there remain elements to shuffle...
+  while (currentIndex != 0) {
+
+    // Pick a remaining element...
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+
+    // And swap it with the current element.
+    [array[currentIndex], array[randomIndex]] = [
+      array[randomIndex], array[currentIndex]];
+  }
+
+  return array;
 }

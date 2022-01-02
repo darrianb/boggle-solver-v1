@@ -54,6 +54,7 @@ function randomBoard(gridSize = 4) {
   for (let i = 0; i < dice.length; i++) {
     board.push(dice[i][Math.ceil(Math.random() * dice[i].length - 1)]);
   }
+  board.sort((a, b) => );
   return board;
 }
 
